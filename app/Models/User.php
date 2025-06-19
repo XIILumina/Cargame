@@ -11,7 +11,15 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+                public function cars()
+            {
+                return $this->hasMany(UserCar::class);
+            }
 
+            public function gameStats()
+            {
+                return $this->hasMany(GameStat::class);
+            }
     /**
      * The attributes that are mass assignable.
      *
@@ -21,6 +29,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'coins',
     ];
 
     /**
@@ -45,4 +54,5 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
 }
