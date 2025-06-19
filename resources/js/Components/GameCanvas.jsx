@@ -3,6 +3,7 @@ import p5 from 'p5';
 
 const GameCanvas = ({ car, onGameOver }) => {
   const sketchRef = useRef();
+  const errorRef = useRef(null);
 
   useEffect(() => {
     const sketch = (p) => {
@@ -11,13 +12,21 @@ const GameCanvas = ({ car, onGameOver }) => {
       const laneWidth = 100;
       const lanes = [-laneWidth, 0, laneWidth];
 
-      p.preload = () => {
-        carImg = car ? p.loadImage(`/assets/cars/${car.car.sprite_path}`) : null;
-      };
-
-      p.setup = () => {
-        p.createCanvas(400, 600);
-        resetGame();
+      p.setup = async () => {
+        try {
+          p.createCanvas(400, 600);
+          // Load car image asynchronously
+          if (car) {
+            carImg = await new Promise((resolve, reject) => {
+              p.loadImage(`/assets/cars/${car.car.sprite_path}`, resolve, reject);
+            });
+          }
+          resetGame();
+        } catch (error) {
+          console.error('Error in setup:', error);
+          errorRef.current = error.message;
+          p.noLoop(); // Stop the sketch if loading fails
+        }
       };
 
       const resetGame = () => {
@@ -79,6 +88,15 @@ const GameCanvas = ({ car, onGameOver }) => {
       };
 
       p.draw = () => {
+        if (errorRef.current) {
+          p.background(0);
+          p.fill(255, 0, 0);
+          p.textSize(20);
+          p.textAlign(p.CENTER);
+          p.text(`Error: ${errorRef.current}`, p.width / 2, p.height / 2);
+          return;
+        }
+
         if (isPaused) {
           p.textSize(32);
           p.fill(255, 0, 0);
@@ -200,7 +218,16 @@ const GameCanvas = ({ car, onGameOver }) => {
     return () => p5Instance.remove();
   }, [car, onGameOver]);
 
-  return <div ref={sketchRef} className="mx-auto"></div>;
+  return (
+    <div>
+      <div ref={sketchRef} className="mx-auto"></div>
+      {errorRef.current && (
+        <div className="text-red-500 text-center mt-4">
+          Error loading game: {errorRef.current}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default GameCanvas;

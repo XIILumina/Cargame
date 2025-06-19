@@ -2,6 +2,7 @@ import React from 'react';
 import { Inertia } from '@inertiajs/inertia';
 import GameCanvas from '../Components/GameCanvas';
 
+
 const Game = ({ user, activeCar }) => {
   const handleGameOver = (score, coins) => {
     if (user) {
@@ -12,7 +13,9 @@ const Game = ({ user, activeCar }) => {
   return (
     <div className="text-center">
       <h1 className="text-3xl font-bold mb-4">Car Game</h1>
-      <GameCanvas car={activeCar} onGameOver={handleGameOver} />
+
+        <GameCanvas car={activeCar} onGameOver={handleGameOver} />
+
     </div>
   );
 };
