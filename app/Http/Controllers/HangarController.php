@@ -7,12 +7,13 @@ use App\Models\Part;
 use App\Models\UserCar;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class HangarController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $cars = $user ? UserCar::where('user_id', $user->id)->with('car')->get() : [];
         $availableCars = Car::all();
         $parts = Part::all();
@@ -28,7 +29,12 @@ class HangarController extends Controller
     public function buyCar(Request $request)
     {
         $request->validate(['car_id' => 'required|exists:cars,id']);
-        $user = auth()->user();
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $car = Car::find($request->car_id);
 
         if ($user->coins < $car->cost) {
@@ -54,7 +60,11 @@ class HangarController extends Controller
             'car_id' => 'required|exists:user_cars,id',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $part = Part::find($request->part_id);
         $userCar = UserCar::where('user_id', $user->id)->where('id', $request->car_id)->first();
 
@@ -80,7 +90,11 @@ class HangarController extends Controller
     public function setActiveCar(Request $request)
     {
         $request->validate(['car_id' => 'required|exists:user_cars,id']);
-        $user = auth()->user();
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
 
         UserCar::where('user_id', $user->id)->update(['is_active' => false]);
         UserCar::where('user_id', $user->id)->where('id', $request->car_id)->update(['is_active' => true]);
@@ -95,7 +109,12 @@ class HangarController extends Controller
             'color' => 'required|string',
         ]);
 
-        $userCar = UserCar::where('user_id', auth()->id())->where('id', $request->car_id)->first();
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $userCar = UserCar::where('user_id', $user->id)->where('id', $request->car_id)->first();
         if ($userCar) {
             $userCar->color = $request->color;
             $userCar->save();
